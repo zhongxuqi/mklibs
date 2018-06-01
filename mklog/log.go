@@ -77,6 +77,7 @@ func NewWithReq(req *http.Request) Logger {
 	logID := req.Header.Get(common.HttpLogID)
 	if logID == "" {
 		logID = base64.URLEncoding.EncodeToString(b[:])
+		req.Header.Set(common.HttpLogID, logID)
 	}
 	return &logger{
 		ctx:   context.TODO(),

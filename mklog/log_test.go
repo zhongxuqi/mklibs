@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/zhongxuqi/mklibs/common"
 )
 
 func TestNewLog(t *testing.T) {
@@ -15,9 +17,17 @@ func TestNewLog(t *testing.T) {
 	}
 
 	req := httptest.NewRequest(http.MethodGet, "http://web.com", bytes.NewBufferString(""))
-	req.Header.Set(HttpLogID, "test-log")
+
+	// init with empty req
 	ml = NewWithReq(req)
-	if mlInstance, _ := ml.(*logger); mlInstance.level != LevelDebug || mlInstance.logID != "test-log" {
+	if mlInstance, _ := ml.(*logger); mlInstance.level != LevelDebug || mlInstance.logID == "" || req.Header.Get(common.HttpLogID) != mlInstance.logID {
+		t.Fatalf("data error %+v", mlInstance)
+	}
+
+	// init with header req
+	req.Header.Set(common.HttpLogID, "test-log")
+	ml = NewWithReq(req)
+	if mlInstance, _ := ml.(*logger); mlInstance.level != LevelDebug || mlInstance.logID != "test-log" || req.Header.Get(common.HttpLogID) != mlInstance.logID {
 		t.Fatalf("data error %+v", mlInstance)
 	}
 
