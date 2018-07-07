@@ -16,6 +16,7 @@ import (
 // const ...
 const (
 	ContentTypeJSON = "application/json"
+	ContentTypeForm = "application/x-www-form-urlencoded"
 )
 
 var (
@@ -39,6 +40,8 @@ type HTTPClient interface {
 	PutJSON(ctx context.Context, path string, params interface{}, res interface{}) error
 	PostJSONEx(ctx context.Context, path string, params interface{}, res interface{}, header map[string]string, options ...HTTPClientOption) error
 	PostJSON(ctx context.Context, path string, params interface{}, res interface{}) error
+	PostEx(ctx context.Context, path string, params map[string]string, res interface{}, header map[string]string, options ...HTTPClientOption) error
+	Post(ctx context.Context, path string, params map[string]string, res interface{}) error
 }
 
 type httpClient struct {
@@ -193,6 +196,46 @@ func (s *httpClient) PostJSON(ctx context.Context, path string, params interface
 		return err
 	}
 	return s.do(ctx, req, res, map[string]string{"Content-Type": ContentTypeJSON})
+}
+
+// PostEx ...
+func (s *httpClient) PostEx(ctx context.Context, path string, params map[string]string, res interface{}, header map[string]string, options ...HTTPClientOption) error {
+	ml := mklog.NewWithContext(ctx)
+	paramsStr := ""
+	for k, v := range params {
+		if paramsStr != "" {
+			paramsStr += "&"
+		}
+		paramsStr += k + "=" + v
+	}
+	if header == nil {
+		header = make(map[string]string)
+	}
+	header["Content-Type"] = ContentTypeForm
+	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s%s", s.host, path), bytes.NewBufferString(paramsStr))
+	if err != nil {
+		ml.Errorf("http.NewRequest error %+v", err)
+		return err
+	}
+	return s.do(ctx, req, res, header, options...)
+}
+
+// Post ...
+func (s *httpClient) Post(ctx context.Context, path string, params map[string]string, res interface{}) error {
+	ml := mklog.NewWithContext(ctx)
+	paramsStr := ""
+	for k, v := range params {
+		if paramsStr != "" {
+			paramsStr += "&"
+		}
+		paramsStr += k + "=" + v
+	}
+	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s%s", s.host, path), bytes.NewBufferString(paramsStr))
+	if err != nil {
+		ml.Errorf("http.NewRequest error %+v", err)
+		return err
+	}
+	return s.do(ctx, req, res, map[string]string{"Content-Type": ContentTypeForm})
 }
 
 func (s *httpClient) do(ctx context.Context, req *http.Request, res interface{}, header map[string]string, options ...HTTPClientOption) error {
