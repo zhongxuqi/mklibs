@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	isatty "github.com/mattn/go-isatty"
 	"github.com/zhongxuqi/mklibs/common"
 )
 
@@ -44,6 +45,8 @@ var (
 		LevelInfo:  colorGreen,
 		LevelError: colorRed,
 	}
+	NoColor = os.Getenv("TERM") == "dumb" ||
+		(!isatty.IsTerminal(os.Stdout.Fd()) && !isatty.IsCygwinTerminal(os.Stdout.Fd()))
 )
 
 type Logger interface {
@@ -106,6 +109,10 @@ func (s *logger) getPrefix(level Level) string {
 	index := strings.LastIndex(file, "src")
 	if index > 0 {
 		index += 4
+	}
+	if NoColor {
+		return fmt.Sprintf("%s[%s][%s]%s:%d:", time.Now().Format(time.RFC3339), LevelMap[level],
+			s.logID, file[index:], line)
 	}
 	return fmt.Sprintf("%s%s%s[%s]%s[%s]%s%s:%d:%s", colorBlue, time.Now().Format(time.RFC3339), LevelColorMap[level], LevelMap[level],
 		colorPurple, s.logID, colorBlue, file[index:], line, colorNone)
