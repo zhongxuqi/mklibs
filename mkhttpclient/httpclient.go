@@ -312,7 +312,7 @@ func (s *httpClient) do(ctx context.Context, req *http.Request, res interface{},
 
 func parseRes(ctx context.Context, httpRes *http.Response, res interface{}) error {
 	ml := mklog.NewWithContext(ctx)
-	if httpRes.StatusCode != http.StatusOK {
+	if httpRes.StatusCode/100 != 2 {
 		return fmt.Errorf("http error %d %s", httpRes.StatusCode, httpRes.Status)
 	}
 	bodyByte, err := ioutil.ReadAll(httpRes.Body)
