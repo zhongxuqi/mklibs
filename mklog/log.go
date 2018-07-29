@@ -152,7 +152,7 @@ func (s *logger) writeLog(lvl Level, format string, v ...interface{}) {
 	}
 	out := s.writer
 	if out == nil {
-		out = os.Stdin
+		out = os.Stdout
 	}
 	args := make([]interface{}, 0, len(v)+1)
 	args = append(args, s.getPrefix(lvl))
