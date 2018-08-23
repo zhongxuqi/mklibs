@@ -32,8 +32,8 @@ var (
 
 // HTTPClient ...
 type HTTPClient interface {
-	GetEx(ctx context.Context, path string, res interface{}, header map[string]string, options ...HTTPClientOption) error
-	Get(ctx context.Context, path string, res interface{}) error
+	GetEx(ctx context.Context, path string, params map[string]interface{}, res interface{}, header map[string]string, options ...HTTPClientOption) error
+	Get(ctx context.Context, path string, params map[string]interface{}, res interface{}) error
 	DeleteEx(ctx context.Context, path string, res interface{}, header map[string]string, options ...HTTPClientOption) error
 	Delete(ctx context.Context, path string, res interface{}) error
 	PutJSONEx(ctx context.Context, path string, params interface{}, res interface{}, header map[string]string, options ...HTTPClientOption) error
@@ -67,8 +67,14 @@ func NewHTTPClient(host string, options ...HTTPClientOption) HTTPClient {
 }
 
 // GetEx ...
-func (s *httpClient) GetEx(ctx context.Context, path string, res interface{}, header map[string]string, options ...HTTPClientOption) error {
+func (s *httpClient) GetEx(ctx context.Context, path string, params map[string]interface{}, res interface{}, header map[string]string, options ...HTTPClientOption) error {
 	ml := mklog.NewWithContext(ctx)
+	if len(params) > 0 {
+		path += "?"
+		for k, v := range params {
+			path += fmt.Sprintf("%s=%+v&", k, v)
+		}
+	}
 	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s%s", s.host, path), nil)
 	if err != nil {
 		ml.Errorf("http.NewRequest error %+v", err)
@@ -78,8 +84,14 @@ func (s *httpClient) GetEx(ctx context.Context, path string, res interface{}, he
 }
 
 // Get ...
-func (s *httpClient) Get(ctx context.Context, path string, res interface{}) error {
+func (s *httpClient) Get(ctx context.Context, path string, params map[string]interface{}, res interface{}) error {
 	ml := mklog.NewWithContext(ctx)
+	if len(params) > 0 {
+		path += "?"
+		for k, v := range params {
+			path += fmt.Sprintf("%s=%+v&", k, v)
+		}
+	}
 	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s%s", s.host, path), nil)
 	if err != nil {
 		ml.Errorf("http.NewRequest error %+v", err)
