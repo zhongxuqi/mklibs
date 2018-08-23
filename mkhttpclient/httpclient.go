@@ -300,18 +300,16 @@ func (s *httpClient) do(ctx context.Context, req *http.Request, res interface{},
 
 func parseRes(ctx context.Context, httpRes *http.Response, res interface{}) error {
 	ml := mklog.NewWithContext(ctx)
-	if httpRes.StatusCode != http.StatusOK {
-		return fmt.Errorf("http error %d %s", httpRes.StatusCode, httpRes.Status)
-	}
 	bodyByte, err := ioutil.ReadAll(httpRes.Body)
 	if err != nil {
 		ml.Errorf("ioutil.ReadAll error %+v", err)
-		return err
 	}
 	err = json.Unmarshal(bodyByte, res)
 	if err != nil {
 		ml.Errorf("json.Unmarshal error %+v", err)
-		return err
+	}
+	if httpRes.StatusCode/100 != 2 {
+		return fmt.Errorf("http error %d %s", httpRes.StatusCode, httpRes.Status)
 	}
 	return nil
 }
