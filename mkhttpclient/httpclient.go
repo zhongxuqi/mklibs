@@ -315,6 +315,7 @@ func parseRes(ctx context.Context, httpRes *http.Response, res interface{}) erro
 	bodyByte, err := ioutil.ReadAll(httpRes.Body)
 	if err != nil {
 		ml.Errorf("ioutil.ReadAll error %+v", err)
+		return err
 	}
 	err = json.Unmarshal(bodyByte, res)
 	if err != nil {
@@ -322,9 +323,6 @@ func parseRes(ctx context.Context, httpRes *http.Response, res interface{}) erro
 	}
 	if httpRes.StatusCode/100 != 2 {
 		return fmt.Errorf("http error %d %s", httpRes.StatusCode, httpRes.Status)
-	}
-	if httpRes.StatusCode/100 != 2 {
-		return fmt.Errorf("http error %d %s %s", httpRes.StatusCode, httpRes.Status, string(bodyByte))
 	}
 	return nil
 }
