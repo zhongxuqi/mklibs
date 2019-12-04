@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/zhongxuqi/mklibs/common"
@@ -202,6 +203,7 @@ func (s *httpClient) PostJSON(ctx context.Context, path string, params interface
 			return err
 		}
 	}
+	ml.Infof("[POST]%+v body: %+v", fmt.Sprintf("%s%s", s.host, path), string(paramsByte))
 	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s%s", s.host, path), bytes.NewBuffer(paramsByte))
 	if err != nil {
 		ml.Errorf("http.NewRequest error %+v", err)
@@ -220,6 +222,7 @@ func (s *httpClient) PostEx(ctx context.Context, path string, params map[string]
 		}
 		paramsStr += k + "=" + v
 	}
+	ml.Infof("[POST]%+v body: %+v", fmt.Sprintf("%s%s", s.host, path), paramsStr)
 	if header == nil {
 		header = make(map[string]string)
 	}
@@ -240,8 +243,9 @@ func (s *httpClient) Post(ctx context.Context, path string, params map[string]st
 		if paramsStr != "" {
 			paramsStr += "&"
 		}
-		paramsStr += k + "=" + v
+		paramsStr += k + "=" + url.QueryEscape(v)
 	}
+	ml.Infof("[POST]%+v body: %+v", fmt.Sprintf("%s%s", s.host, path), paramsStr)
 	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s%s", s.host, path), bytes.NewBufferString(paramsStr))
 	if err != nil {
 		ml.Errorf("http.NewRequest error %+v", err)
@@ -286,7 +290,7 @@ func (s *httpClient) do(ctx context.Context, req *http.Request, res interface{},
 				return nil
 			case err := <-errChan:
 				ml.Errorf("client.Do error %+v", err)
-			case <-time.Tick(currConfig.RetryTimeout):
+			case <-time.After(currConfig.RetryTimeout):
 				ml.Infof("retry %+v", i)
 			}
 		} else {
@@ -300,7 +304,7 @@ func (s *httpClient) do(ctx context.Context, req *http.Request, res interface{},
 			case err := <-errChan:
 				ml.Errorf("http error %+v", err)
 				return err
-			case <-time.Tick(currConfig.TotalTimeout):
+			case <-time.After(currConfig.TotalTimeout):
 				ml.Errorf("req %+v error timeout", req)
 				return fmt.Errorf("req %+v error timeout", req)
 			}
@@ -317,6 +321,7 @@ func parseRes(ctx context.Context, httpRes *http.Response, res interface{}) erro
 		ml.Errorf("ioutil.ReadAll error %+v", err)
 		return err
 	}
+	ml.Infof("response body: %+v", string(bodyByte))
 	err = json.Unmarshal(bodyByte, res)
 	if err != nil {
 		ml.Errorf("json.Unmarshal error %+v", err)

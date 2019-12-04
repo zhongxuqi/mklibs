@@ -70,7 +70,7 @@ func TestHttpRpc(t *testing.T) {
 
 	// 测试Get
 	var res testRes
-	if err := client.Get(context.TODO(), "/rpc", &res); err != nil {
+	if err := client.Get(context.TODO(), "/rpc", map[string]interface{}{}, &res); err != nil {
 		t.Fatalf("client.Get error %+v", err)
 	} else if res.ErrMsg != http.MethodGet {
 		t.Fatalf("client.Get data error %+v", res)
@@ -80,12 +80,12 @@ func TestHttpRpc(t *testing.T) {
 	} else if res.ErrMsg != http.MethodDelete {
 		t.Fatalf("client.Get data error %+v", res)
 	}
-	if err := client.PostJSON(context.TODO(), "/rpc", res, &res); err != nil {
+	if err := client.PostJSON(context.TODO(), "/rpc", map[string]interface{}{}, &res); err != nil {
 		t.Fatalf("client.Get error %+v", err)
 	} else if res.ErrMsg != http.MethodPost {
 		t.Fatalf("client.Get data error %+v", res)
 	}
-	if err := client.PutJSON(context.TODO(), "/rpc", res, &res); err != nil {
+	if err := client.PutJSON(context.TODO(), "/rpc", map[string]interface{}{}, &res); err != nil {
 		t.Fatalf("client.Get error %+v", err)
 	} else if res.ErrMsg != http.MethodPut {
 		t.Fatalf("client.Get data error %+v", res)
@@ -129,7 +129,7 @@ func TestHttpRpcEx(t *testing.T) {
 
 	// 测试Get
 	var res testRes
-	if err := client.GetEx(context.TODO(), "/rpc", &res, map[string]string{"header-test": "httprpc"}); err != nil {
+	if err := client.GetEx(context.TODO(), "/rpc", map[string]interface{}{}, &res, map[string]string{"header-test": "httprpc"}); err != nil {
 		t.Fatalf("client.Get error %+v", err)
 	} else if res.ErrMsg != http.MethodGet {
 		t.Fatalf("client.Get data error %+v", res)
@@ -139,12 +139,12 @@ func TestHttpRpcEx(t *testing.T) {
 	} else if res.ErrMsg != http.MethodDelete {
 		t.Fatalf("client.Delete data error %+v", res)
 	}
-	if err := client.PostJSONEx(context.TODO(), "/rpc", res, &res, map[string]string{"header-test": "httprpc"}); err != nil {
+	if err := client.PostJSONEx(context.TODO(), "/rpc", map[string]interface{}{}, &res, map[string]string{"header-test": "httprpc"}); err != nil {
 		t.Fatalf("client.Get error %+v", err)
 	} else if res.ErrMsg != http.MethodPost {
 		t.Fatalf("client.Get data error %+v", res)
 	}
-	if err := client.PutJSONEx(context.TODO(), "/rpc", res, &res, map[string]string{"header-test": "httprpc"}); err != nil {
+	if err := client.PutJSONEx(context.TODO(), "/rpc", map[string]interface{}{}, &res, map[string]string{"header-test": "httprpc"}); err != nil {
 		t.Fatalf("client.Get error %+v", err)
 	} else if res.ErrMsg != http.MethodPut {
 		t.Fatalf("client.Get data error %+v", res)
@@ -181,7 +181,7 @@ func TestHttpRpcRetry(t *testing.T) {
 
 	// 测试Get
 	var res testRes
-	if err := client.GetEx(context.TODO(), "/rpc", &res, map[string]string{}, WithRetryTimes(1)); err != nil {
+	if err := client.GetEx(context.TODO(), "/rpc", map[string]interface{}{}, &res, map[string]string{}, WithRetryTimes(1)); err != nil {
 		t.Fatalf("client.Get error %+v", err)
 	} else if res.ErrMsg != http.MethodGet {
 		t.Fatalf("client.Get data error %+v", res)
