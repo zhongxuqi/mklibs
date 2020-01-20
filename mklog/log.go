@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"runtime"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -106,18 +105,12 @@ func NewWithContext(ctx context.Context) Logger {
 
 func (s *logger) getPrefix(level Level) string {
 	_, file, line, _ := runtime.Caller(3)
-	index := strings.LastIndex(file, "src")
-	if index > 0 {
-		index += 4
-	} else {
-		index = 0
-	}
 	if NoColor {
 		return fmt.Sprintf("%s[%s][%s]%s:%d:", time.Now().Format(time.RFC3339), LevelMap[level],
-			s.logID, file[index:], line)
+			s.logID, file, line)
 	}
 	return fmt.Sprintf("%s%s%s[%s]%s[%s]%s%s:%d:%s", colorBlue, time.Now().Format(time.RFC3339), LevelColorMap[level], LevelMap[level],
-		colorPurple, s.logID, colorBlue, file[index:], line, colorNone)
+		colorPurple, s.logID, colorBlue, file, line, colorNone)
 }
 
 func (s *logger) SetOutput(writer io.Writer) {
