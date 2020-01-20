@@ -48,14 +48,10 @@ func getStackInfo() string {
 		}
 		theFunc := runtime.FuncForPC(pc)
 		file, line := theFunc.FileLine(pc)
-		index := strings.LastIndex(file, "src")
-		if index > 0 {
-			index += 4
-		}
-		if strings.HasPrefix(file[index:], "runtime") {
+		if strings.HasPrefix(file, "runtime") {
 			continue
 		}
-		stackInfo += fmt.Sprintf("\n    %s:%d", file[index:], line)
+		stackInfo += fmt.Sprintf("\n    %s:%d", file, line)
 	}
 	return stackInfo
 }
