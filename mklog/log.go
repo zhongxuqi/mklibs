@@ -109,6 +109,8 @@ func (s *logger) getPrefix(level Level) string {
 	index := strings.LastIndex(file, "src")
 	if index > 0 {
 		index += 4
+	} else {
+		index = 0
 	}
 	if NoColor {
 		return fmt.Sprintf("%s[%s][%s]%s:%d:", time.Now().Format(time.RFC3339), LevelMap[level],
