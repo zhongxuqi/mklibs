@@ -13,7 +13,7 @@ const (
 	OptionKeyRetryTimes
 	OptionKeyRetryTimeout
 	OptionKeyTotalTimeout
-	OptionKeyOdinMetrics
+	OptionKeyRetryHttpError
 )
 
 // HTTPClientOption ...
@@ -46,6 +46,7 @@ type baseConfig struct {
 	RetryTimes         int
 	RetryTimeout       time.Duration
 	TotalTimeout       time.Duration
+	RetryHttpError     bool
 }
 
 // parseBaseConfig ...
@@ -76,6 +77,10 @@ func parseBaseConfig(defaultOption baseConfig, options []HTTPClientOption) baseC
 		case OptionKeyTotalTimeout:
 			if v, ok := option.OptionValue().(time.Duration); ok {
 				res.TotalTimeout = v
+			}
+		case OptionKeyRetryHttpError:
+			if v, ok := option.OptionValue().(bool); ok {
+				res.RetryHttpError = v
 			}
 		}
 	}
@@ -127,5 +132,13 @@ func WithTotalTimeout(timeout time.Duration) HTTPClientOption {
 	return &httpClientOption{
 		optionKey:   OptionKeyTotalTimeout,
 		optionValue: timeout,
+	}
+}
+
+// WithRetryHttpError
+func WithRetryHttpError(enable bool) HTTPClientOption {
+	return &httpClientOption{
+		optionKey:   OptionKeyRetryHttpError,
+		optionValue: enable,
 	}
 }

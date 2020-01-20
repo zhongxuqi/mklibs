@@ -3,7 +3,9 @@ package mkhttpclient
 import (
 	"context"
 	"encoding/json"
+	"io/ioutil"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 )
@@ -151,22 +153,42 @@ func TestHttpRpcEx(t *testing.T) {
 	}
 }
 
+type Param struct {
+	Key string `json:"key"`
+}
+
 func TestHttpRpcRetry(t *testing.T) {
 	hasRPC := false
 	mux := http.NewServeMux()
 	mux.HandleFunc("/rpc", func(w http.ResponseWriter, r *http.Request) {
+		var req Param
+		reqByte, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			t.Fatalf("ioutil.ReadAll error %+v", err)
+		}
+		if err = json.Unmarshal(reqByte, &req); err != nil {
+			t.Fatalf("json.Unmarshal error %+v", err)
+		}
+		if req.Key != "value" {
+			b, _ := json.Marshal(testRes{
+				ErrNo:  1,
+				ErrMsg: r.Method,
+			})
+			w.Write(b)
+			return
+		}
 		if !hasRPC {
 			hasRPC = true
 			time.Sleep(2 * time.Second)
 		}
 		b, _ := json.Marshal(testRes{
-			ErrNo:  1,
+			ErrNo:  0,
 			ErrMsg: r.Method,
 		})
 		w.Write(b)
 	})
 	server := &http.Server{
-		Addr:           ":8080",
+		Addr:           "127.0.0.1:8080",
 		Handler:        mux,
 		ReadTimeout:    10 * time.Second,
 		WriteTimeout:   10 * time.Second,
@@ -181,9 +203,64 @@ func TestHttpRpcRetry(t *testing.T) {
 
 	// 测试Get
 	var res testRes
-	if err := client.GetEx(context.TODO(), "/rpc", map[string]interface{}{}, &res, map[string]string{}, WithRetryTimes(1)); err != nil {
+	if err := client.PostJSONEx(context.TODO(), "/rpc", Param{
+		Key: "value",
+	}, &res, map[string]string{}, WithRetryTimes(1)); err != nil {
 		t.Fatalf("client.Get error %+v", err)
-	} else if res.ErrMsg != http.MethodGet {
+	} else if res.ErrNo != 0 || res.ErrMsg != http.MethodPost {
+		t.Fatalf("client.Get data error %+v", res)
+	}
+}
+
+func TestHttpErrorRetry(t *testing.T) {
+	hasRPC := false
+	mux := http.NewServeMux()
+	mux.HandleFunc("/rpc", func(w http.ResponseWriter, r *http.Request) {
+		if !hasRPC {
+			hasRPC = true
+			http.NotFound(w, r)
+			return
+		}
+		b, _ := json.Marshal(testRes{
+			ErrNo:  0,
+			ErrMsg: "success",
+		})
+		w.Write(b)
+	})
+	server := &http.Server{
+		Addr:           "127.0.0.1:8080",
+		Handler:        mux,
+		ReadTimeout:    10 * time.Second,
+		WriteTimeout:   10 * time.Second,
+		MaxHeaderBytes: 1 << 20,
+	}
+	go func() {
+		server.ListenAndServe()
+	}()
+	defer server.Shutdown(context.TODO())
+
+	// 测试Get 成功 case1
+	client := NewHTTPClient("http://127.0.0.1:8080", WithRetryTimeout(time.Second), WithTotalTimeout(time.Second))
+	var res testRes
+	if err := client.GetEx(context.TODO(), "/rpc", nil, &res, map[string]string{}, WithRetryTimes(1)); err == nil || !strings.Contains(err.Error(), "http error 404") {
+		t.Fatalf("client.Get error %+v", err)
+	}
+
+	// 测试Get 成功 case2
+	hasRPC = false
+	client = NewHTTPClient("http://127.0.0.1:8080", WithRetryTimeout(time.Second), WithTotalTimeout(time.Second), WithRetryHttpError(false))
+	res = testRes{}
+	if err := client.GetEx(context.TODO(), "/rpc", nil, &res, map[string]string{}, WithRetryTimes(1)); err == nil || !strings.Contains(err.Error(), "http error 404") {
+		t.Fatalf("client.Get error %+v", err)
+	}
+
+	// 测试Get 成功
+	hasRPC = false
+	client = NewHTTPClient("http://127.0.0.1:8080", WithRetryTimeout(time.Second), WithTotalTimeout(time.Second), WithRetryHttpError(true))
+	res = testRes{}
+	if err := client.GetEx(context.TODO(), "/rpc", nil, &res, map[string]string{}, WithRetryTimes(1)); err != nil {
+		t.Fatalf("client.Get error %+v", err)
+	} else if res.ErrNo != 0 || res.ErrMsg != "success" {
 		t.Fatalf("client.Get data error %+v", res)
 	}
 }
