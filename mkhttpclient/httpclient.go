@@ -337,9 +337,6 @@ func parseRes(ctx context.Context, httpRes *http.Response, res interface{}) (int
 		return httpRes.StatusCode, err
 	}
 	ml.Infof("response body: %+v", string(bodyByte))
-	if httpRes.StatusCode/100 != 2 {
-		return httpRes.StatusCode, fmt.Errorf("http error %d %s", httpRes.StatusCode, httpRes.Status)
-	}
 	err = json.Unmarshal(bodyByte, res)
 	if err != nil {
 		ml.Errorf("json.Unmarshal error %+v", err)
