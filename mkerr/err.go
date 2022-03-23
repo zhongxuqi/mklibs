@@ -51,7 +51,7 @@ func getStackInfo() string {
 		if strings.HasPrefix(file, "runtime") {
 			continue
 		}
-		stackInfo += fmt.Sprintf("\n    %s:%d", file, line)
+		stackInfo += fmt.Sprintf("\n    %s:%d", file, line-1)
 	}
 	return stackInfo
 }

@@ -90,4 +90,5 @@ func TestPrint(t *testing.T) {
 	if dist.Len() <= 0 {
 		t.Fatalf("Errorf print error")
 	}
+	t.Fatalf("check...")
 }
